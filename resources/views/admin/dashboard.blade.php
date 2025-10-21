@@ -4,8 +4,13 @@
         'href' => route('admin.dashboard'),
     ],
     [
-        'name' => 'Profile',
+        'name' => 'sid',
+        'href' => route('admin.dashboard'),
     ],
+    [
+        'name' => 'Verstappen',
+    ],
+    
 ]">
     Hola, desde admin Pedriini
 </x-admin-layout>
