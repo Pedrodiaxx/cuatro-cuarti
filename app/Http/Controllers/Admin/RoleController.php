@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-
 class RoleController extends Controller
 {
     /**
@@ -21,7 +20,7 @@ class RoleController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.roles.create');
     }
 
     /**
@@ -45,7 +44,7 @@ class RoleController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        return view('admin.roles.edit');
     }
 
     /**

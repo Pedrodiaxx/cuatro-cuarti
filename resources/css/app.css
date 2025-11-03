@@ -1,12 +1,16 @@
+/* ✅ 1️⃣ Primero: importa el tema de Flowbite */
+@import "flowbite/src/themes/default";
+
+/* ✅ 2️⃣ Luego los módulos base de Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "flowbite/src/themes/default";
+
+/* ✅ 3️⃣ Después activa el plugin y la fuente */
 @plugin "flowbite/plugin";
 @source "../../node_modules/flowbite";
 
-
-
+/* ✅ 4️⃣ Tus reglas personalizadas al final */
 [x-cloak] {
     display: none;
 }

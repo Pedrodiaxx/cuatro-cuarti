@@ -5,6 +5,8 @@ use WireUi\Enum\Packs;
 use WireUi\WireUiConfig as Config;
 
 return [
+    'load_alpine' => false,
+
 
     /*
     |--------------------------------------------------------------------------
@@ -103,6 +105,7 @@ return [
     'time-selector' => Config::timeSelector(),
 
     'toggle' => Config::toggle(),
+    
 
     /*
     |--------------------------------------------------------------------------
