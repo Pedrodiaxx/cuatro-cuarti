@@ -12,4 +12,4 @@
         'name' => 'Editar',
     ]
 ]">
-</x-admin-layout
+</x-admin-layout>

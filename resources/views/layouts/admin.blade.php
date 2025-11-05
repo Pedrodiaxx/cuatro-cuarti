@@ -22,6 +22,10 @@
         <!-- Scripts principales -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://kit.fontawesome.com/a7de8752fc.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        {{-- ✅ WireUI Styles --}}
+
     </head>
 
     <body class="font-sans antialiased bg-gray-50">
@@ -50,8 +54,16 @@
         {{-- 🔹 Scripts adicionales --}}
         <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
 
-        {{-- ✅ Orden correcto: primero WireUI, luego Livewire --}}
+        {{-- Orden correcto: primero WireUI, luego Livewire --}}
         @wireUiScripts
         @livewireScripts
+
+        {{--Mostrar Sweet Alert--}}
+        @if (session('swal'))
+        <script>
+        Swal.fire(@json(session('swal')));
+    </script>
+    @endif
+
     </body>
 </html>
