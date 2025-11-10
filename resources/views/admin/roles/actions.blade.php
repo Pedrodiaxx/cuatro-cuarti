@@ -5,7 +5,7 @@
     </x-wire-button>
 
     <!-- Botón Eliminar -->
-    <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" class="inline">
+    <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" class="delete-form">
         @csrf
         @method('DELETE')
 

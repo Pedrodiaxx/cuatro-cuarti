@@ -13,7 +13,7 @@
     ]
 ]">
 
-<x-wire-card>
+<x-wire-card> {{-- libreria de componentes--}}
     <form action="{{ route('admin.roles.store')}}" method="POST">
 
         @csrf
