@@ -1,9 +1,10 @@
-<x-admin-layout title="Usuarios | Editar"
+<x-admin-layout title="Usuarios | Editar" 
 :breadcrumbs="[
-  ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
-  ['name' => 'Usuarios', 'href' => route('users.index')],
-  ['name' => 'Editar']
+    ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
+    ['name' => 'Usuarios', 'href' => route('admin.users.index')],
+    ['name' => 'Editar']
 ]">
+
 
 <x-wire-card>
   <h2 class="text-lg font-semibold mb-4">Editar usuario</h2>

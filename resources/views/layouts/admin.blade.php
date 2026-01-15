@@ -22,6 +22,7 @@
         <!-- Scripts principales -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://kit.fontawesome.com/a7de8752fc.js" crossorigin="anonymous"></script>
+        {{--sweetalert2 --}}
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         {{-- ✅ WireUI Styles --}}
