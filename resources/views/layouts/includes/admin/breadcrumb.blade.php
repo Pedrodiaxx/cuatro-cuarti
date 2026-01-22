@@ -16,7 +16,7 @@
                     @endisset
                 </li>
             @endforeach
-        </ol>z
+        </ol>
 
         @if (count($breadcrumbs) > 1)
             <h6 class="font-bold mt-2">

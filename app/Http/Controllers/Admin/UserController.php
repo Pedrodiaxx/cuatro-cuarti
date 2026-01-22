@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
@@ -105,6 +106,16 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        //No permitir que un usuario se elimine a sí mismo
+        if (Auth::user()->id === $user->id) {
+             session()->flash('swal', [
+            'icon' => 'success',
+            'title' => 'Usuario eliminado',
+            'text' => 'El usuario ha sido eliminado exitosamente.',
+            ]);
+            abort(403, 'No puedes eliminarte a ti mismo.');
+        }
+
         //Eliminar roles asocioados a un usuario
         $user->roles()->detach();
 
