@@ -104,8 +104,7 @@ foreach ($errorGrupos as $tabName => $fields) {
                             <a href="#"
                                x-on:click.prevent="tab = 'antecedentes'"
                                :class="{
-                                   'text-red-600 border-red-600 active': tab === 'antecedentes' && {{ $hasError ? 'true' : 'false' }} && 
-                                        tab !== 'antecedentes',
+                                   'text-red-600 border-red-600': {{ $hasError ? 'true' : 'false' }} && tab !== 'antecedentes',
                                    'text-blue-600 border-blue-600 active': tab === 'antecedentes'&& !{{ $hasError ? 'true' : 'false' }},
                                    'text-red-600 border-red-600 active': tab === 'antecedentes' && {{ $hasError ? 'true' : 'false' }},
                                    'border-transparent hover:text-blue-600 hover:border-blue-600': tab !== 'antecedentes' && !{{ $hasError ? 'true' : 'false' }},
@@ -128,8 +127,7 @@ foreach ($errorGrupos as $tabName => $fields) {
                             <a href="#"
                                x-on:click.prevent="tab = 'informacion-general'"
                                :class="{
-                                   'text-red-600 border-red-600 active': tab === 'informacion-general' && {{ $hasError ? 'true' : 'false' }} && 
-                                        tab !== 'informacion-general',
+                                   'text-red-600 border-red-600': {{ $hasError ? 'true' : 'false' }} && tab !== 'informacion-general',
                                    'text-blue-600 border-blue-600 active': tab === 'informacion-general'&& !{{ $hasError ? 'true' : 'false' }},
                                    'text-red-600 border-red-600 active': tab === 'informacion-general' && {{ $hasError ? 'true' : 'false' }},
                                    'border-transparent hover:text-blue-600 hover:border-blue-600': tab !== 'informacion-general' && !{{ $hasError ? 'true' : 'false' }},
@@ -152,8 +150,7 @@ foreach ($errorGrupos as $tabName => $fields) {
                             <a href="#"
                                x-on:click.prevent="tab = 'contacto-emergencia'"
                                :class="{
-                                   'text-red-600 border-red-600 active': tab === 'contacto-emergencia' && {{ $hasError ? 'true' : 'false' }} && 
-                                        tab !== 'contacto-emergencia',
+                                   'text-red-600 border-red-600': {{ $hasError ? 'true' : 'false' }} && tab !== 'contacto-emergencia',
                                    'text-blue-600 border-blue-600 active': tab === 'contacto-emergencia'&& !{{ $hasError ? 'true' : 'false' }},
                                    'text-red-600 border-red-600 active': tab === 'contacto-emergencia' && {{ $hasError ? 'true' : 'false' }},
                                    'border-transparent hover:text-blue-600 hover:border-blue-600': tab !== 'contacto-emergencia' && !{{ $hasError ? 'true' : 'false' }},
