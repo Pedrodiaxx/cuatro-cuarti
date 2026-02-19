@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Doctor;
 
 class UserController extends Controller
 {
@@ -31,38 +33,51 @@ class UserController extends Controller
      * Guarda un nuevo usuario (temporalmente vacío).
      */
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|min:3|max:255',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users',
-            'phone' => 'required|digits between:7,15',
-            'address' => 'required|string|min:3|max:255',
-            'role_id'=>'required|exists:roles,id',
-        ]);
+{
+    $data = $request->validate([
+        'name' => 'required|string|min:3|max:255',
+        'email' => 'required|string|email|unique:users',
+        'password' => 'required|string|min:8|confirmed',
+        'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users',
+        'phone' => 'required|digits_between:7,15',
+        'address' => 'required|string|min:3|max:255',
+        'role_id' => 'required|exists:roles,id',
+    ]);
 
-        $user = User::create($data);
+    // 1) Guardar role_id y quitarlo del array del user
+    $roleId = $data['role_id'];
+    unset($data['role_id']);
 
-        $user->roles()->attach($data['role_id']);
+    // 2) Hashear password
+    $data['password'] = Hash::make($data['password']);
 
-        session()->flash('swal', [
-            'icon' => 'success',
-            'title' => 'Usuario creado',
-            'text' => 'El usuario ha sido creado exitosamente.',
-            ]);
+    // 3) Crear usuario
+    $user = User::create($data);
 
-            //si el usuario creado es un paciente, envia el modulo paciente
-            if ($user::role('Paciente')) {
-                //creamos el registro de paciente 
-                $patient = $user->patient()->create([]);
-                return redirect()->route('admin.patients.edit', $patient);
-            }
+    // 4) Asignar rol
+    $user->roles()->attach($roleId);
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuario creado exitosamente.');
+    session()->flash('swal', [
+        'icon' => 'success',
+        'title' => 'Usuario creado',
+        'text' => 'El usuario ha sido creado exitosamente.',
+    ]);
 
+    // 5) Crear módulo automático según rol
+    $roleName = Role::find($roleId)->name;
 
+    if ($roleName === 'Paciente') {
+        $patient = $user->patient()->firstOrCreate([]);
+        return redirect()->route('admin.patients.edit', $patient);
     }
+
+    if ($roleName === 'Doctor') {
+        $doctor = $user->doctor()->firstOrCreate([]);
+        return redirect()->route('admin.doctors.edit', $doctor);
+    }
+
+    return redirect()->route('admin.users.index')->with('success', 'Usuario creado exitosamente.');
+}
 
     /**
      * Muestra el formulario para editar un usuario existente.
@@ -95,6 +110,18 @@ class UserController extends Controller
     }
 
     $user->roles()->sync($data['role_id']);
+
+    $roleName = Role::find($data['role_id'])->name;
+
+if ($roleName === 'Paciente') {
+    $patient = $user->patient()->firstOrCreate([]);
+    return redirect()->route('admin.patients.edit', $patient);
+}
+
+if ($roleName === 'Doctor') {
+    $doctor = $user->doctor()->firstOrCreate([]);
+    return redirect()->route('admin.doctors.edit', $doctor);
+}
 
     session()->flash('swal', [
         'icon' => 'success',

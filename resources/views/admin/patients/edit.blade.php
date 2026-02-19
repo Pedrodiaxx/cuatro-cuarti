@@ -79,8 +79,8 @@ foreach ($errorGrupos as $tabName => $fields) {
             <div x-data="{ tab: '{{ $initialTab }}' }">
 
                 {{-- menu de pestañas --}}
-                <div class="border-b border-gray-200">
-                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500">
+                {{--<div class="border-b border-gray-200">--}}
+                    {{--<ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500">--}}
 
                         {{-- Tab 1 --}}
                         <li class="me-2">
@@ -166,11 +166,11 @@ foreach ($errorGrupos as $tabName => $fields) {
                             </a>
                         </li>
 
-                    </ul>
-                </div>
+                    {{--</ul>--}}
+                {{--</div>--}}
 
                 {{-- contenido de los tabs --}}
-                <div class="p-4 mt-4">
+                {{--<div class="p-4 mt-4">--}}
 
                     {{-- TAB 1: Datos personales --}}
                     <div x-show="tab === 'datos-personales'" style="display:none;">
@@ -282,7 +282,7 @@ foreach ($errorGrupos as $tabName => $fields) {
                         </div>
                     </div>   
 
-                </div>
+                {{--</div>--}}
 
             </div>
         </x-wire-card>
