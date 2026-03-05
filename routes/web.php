@@ -14,4 +14,6 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return view('admin.dashboard'); // vista en resources/views/admin/dashboard.blade.php
     })->name('dashboard');
+
+    Route::resource('feedbacks', \App\Http\Controllers\FeedbackController::class)->except(['show', 'destroy', 'edit', 'update']);
 });
