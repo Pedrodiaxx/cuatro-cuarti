@@ -34,6 +34,12 @@ $links = [
         'href' => route('admin.doctors.index'),
         'active' => request()->routeIs('admin.doctors.*'),
     ],
+    [
+        'name' => 'Sugerencias',
+        'icon' => 'fa-solid fa-inbox',
+        'href' => route('admin.feedbacks.index'),
+        'active' => request()->routeIs('admin.feedbacks.*'),
+    ],
 ];
 @endphp
 
