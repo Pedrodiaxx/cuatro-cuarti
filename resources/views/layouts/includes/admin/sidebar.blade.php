@@ -35,6 +35,12 @@ $links = [
         'active' => request()->routeIs('admin.doctors.*'),
     ],
     [
+        'name' => 'Citas médicas',
+        'icon' => 'fa-solid fa-calendar-check',
+        'href' => route('admin.appointments.index'),
+        'active' => request()->routeIs('admin.appointments.*'),
+    ],
+    [
         'name' => 'Sugerencias',
         'icon' => 'fa-solid fa-inbox',
         'href' => route('admin.feedbacks.index'),

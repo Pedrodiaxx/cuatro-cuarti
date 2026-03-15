@@ -16,4 +16,17 @@ Route::middleware([
     })->name('dashboard');
 
     Route::resource('feedbacks', \App\Http\Controllers\FeedbackController::class)->except(['show', 'destroy', 'edit', 'update']);
+
+    // Custom Appointment creation route (Livewire)
+    Route::get('/appointments/create', \App\Livewire\Admin\AppointmentManager::class)->name('appointments.create');
+    
+    // Appointments (Resource without create and store, since Livewire will handle it)
+    Route::resource('appointments', \App\Http\Controllers\Admin\AppointmentController::class)
+        ->except(['create', 'store']);
+        
+    // Consultation Manager
+    Route::get('/appointments/{appointment}/consultation', \App\Livewire\Admin\ConsultationManager::class)->name('appointments.consultation');
+    
+    // Doctor Schedules
+    Route::get('/doctors/{doctor}/schedule', \App\Livewire\Admin\DoctorScheduleManager::class)->name('doctors.schedule');
 });
