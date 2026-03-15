@@ -95,6 +95,13 @@
                                         </svg>
                                     </a>
 
+                                    {{-- Horarios (Reloj) --}}
+                                    <a href="{{ route('admin.doctors.schedules', $doctor) }}"
+                                       class="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
+                                       title="Ver Horarios">
+                                        <i class="fa-solid fa-clock"></i>
+                                    </a>
+
                                 </div>
                             </td>
 

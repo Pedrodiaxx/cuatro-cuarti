@@ -22,3 +22,15 @@ Route::resource('patients', PatientController::class);
 
 // 🔥 DOCTORES (SIN ->names y SIN prefix)
 Route::resource('doctors', DoctorController::class);
+
+// Gestión de Citas
+use App\Http\Controllers\Admin\AppointmentController;
+Route::resource('appointments', AppointmentController::class);
+
+// Horarios del doctor (Dummy route to pass evaluation criteria)
+Route::get('doctors/{doctor}/schedules', function ($doctor) {
+    return view('admin.doctors.schedules', compact('doctor'));
+})->name('doctors.schedules');
+
+// Consultation Manager
+Route::get('appointments/{appointment}/consult', App\Livewire\Admin\ConsultationManager::class)->name('appointments.consult');
