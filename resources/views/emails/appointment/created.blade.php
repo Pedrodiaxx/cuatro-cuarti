@@ -4,9 +4,9 @@
     <title>Comprobante de Cita</title>
 </head>
 <body>
-    <h2>Hola, {{ $appointment->patient->user->name }}</h2>
-    <p>Se ha registrado tu cita médica con éxito.</p>
-    <p>Adjunto a este correo encontrarás el comprobante en formato PDF con los detalles de tu cita.</p>
+    <h2>Hola, {{ $recipientName }}</h2>
+    <p>Se ha registrado una cita médica de forma exitosa.</p>
+    <p>Adjunto a este correo encontrarás el comprobante en formato PDF con los detalles de la cita.</p>
     <br>
     <p>Atentamente,</p>
     <p>Tu clínica de confianza</p>

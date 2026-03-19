@@ -17,13 +17,15 @@ class AppointmentCreatedMail extends Mailable
     use Queueable, SerializesModels;
 
     public $appointment;
+    public $recipientName;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Appointment $appointment)
+    public function __construct(Appointment $appointment, $recipientName = null)
     {
         $this->appointment = $appointment;
+        $this->recipientName = $recipientName ?? 'Usuario';
     }
 
     /**

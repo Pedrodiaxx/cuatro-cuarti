@@ -17,5 +17,18 @@ Schedule::call(function () {
         ->orderBy('start_time')
         ->get();
 
-    Mail::to('admin@example.com')->send(new DailyAppointmentsReportMail($appointments));
+    // Enviar reporte completo al administrador
+    Mail::to('admin@example.com')->send(new DailyAppointmentsReportMail($appointments, 'Administrador'));
+
+    // Agrupar citas por doctor para enviar sus reportes individuales
+    $appointmentsByDoctor = $appointments->groupBy('doctor_id');
+
+    foreach ($appointmentsByDoctor as $doctorId => $doctorAppointments) {
+        $doctor = $doctorAppointments->first()->doctor;
+        if ($doctor && $doctor->user && $doctor->user->email) {
+            Mail::to($doctor->user->email)->send(
+                new DailyAppointmentsReportMail($doctorAppointments, 'Dr(a). ' . $doctor->user->name)
+            );
+        }
+    }
 })->dailyAt('08:00');
