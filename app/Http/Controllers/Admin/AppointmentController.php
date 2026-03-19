@@ -46,7 +46,14 @@ class AppointmentController extends Controller
         $validated['duration'] = 15;
         $validated['status'] = 1;
 
-        Appointment::create($validated);
+        $appointment = Appointment::create($validated);
+
+        // Send email to patient
+        $appointment->load(['patient.user', 'doctor.user']); // Load relationships for the view
+        if ($appointment->patient && $appointment->patient->user && $appointment->patient->user->email) {
+            \Illuminate\Support\Facades\Mail::to($appointment->patient->user->email)
+                ->send(new \App\Mail\AppointmentCreatedMail($appointment));
+        }
 
         return redirect()->route('admin.appointments.index')
             ->with('success', 'Cita registrada exitosamente.');

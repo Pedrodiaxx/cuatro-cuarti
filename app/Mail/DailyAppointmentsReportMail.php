@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Mail;
+
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
+
+class DailyAppointmentsReportMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public $appointments;
+
+    /**
+     * Create a new message instance.
+     */
+    public function __construct(Collection $appointments)
+    {
+        $this->appointments = $appointments;
+    }
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Reporte Diario de Citas - ' . now()->format('d/m/Y'),
+        );
+    }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.appointment.daily_report',
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        $pdf = Pdf::loadView('pdf.daily_report', ['appointments' => $this->appointments]);
+
+        return [
+            Attachment::fromData(fn () => $pdf->output(), 'reporte_citas_' . now()->format('Y_m_d') . '.pdf')
+                ->withMime('application/pdf'),
+        ];
+    }
+}
