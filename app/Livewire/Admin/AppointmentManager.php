@@ -10,6 +10,8 @@ use App\Models\Patient;
 use Carbon\Carbon;
 
 use App\Models\DoctorSchedule;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AppointmentConfirmed;
 
 class AppointmentManager extends Component
 {
@@ -112,7 +114,7 @@ class AppointmentManager extends Component
         $start = Carbon::parse($this->selectedTime);
         $end = $start->copy()->addMinutes(15);
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'doctor_id'  => $this->selectedDoctorId,
             'patient_id' => $this->patientId,
             'date'       => $this->searchDate,
@@ -122,6 +124,16 @@ class AppointmentManager extends Component
             'reason'     => $this->reason,
             'status'     => 1,
         ]);
+
+        $appointment->load(['patient.user', 'doctor.user', 'doctor.speciality']);
+        
+        try {
+            if ($appointment->patient->user->email) {
+                Mail::to($appointment->patient->user->email)->send(new AppointmentConfirmed($appointment));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Mail error: ' . $e->getMessage());
+        }
 
         session()->flash('swall', [
             'icon' => 'success',
