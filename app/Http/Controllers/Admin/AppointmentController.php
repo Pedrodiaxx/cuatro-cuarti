@@ -51,15 +51,24 @@ class AppointmentController extends Controller
         // Send email to patient
         $appointment->load(['patient.user', 'doctor.user']); // Load relationships for the view
         
-        if ($appointment->patient && $appointment->patient->user && $appointment->patient->user->email) {
-            \Illuminate\Support\Facades\Mail::to($appointment->patient->user->email)
-                ->send(new \App\Mail\AppointmentCreatedMail($appointment, $appointment->patient->user->name));
-        }
+        try {
+            if ($appointment->patient && $appointment->patient->user) {
+                // Forzado para enviar siempre al correo personal drilos482@gmail.com por instrucción
+                \Illuminate\Support\Facades\Mail::to('drilos482@gmail.com')
+                    ->send(new \App\Mail\AppointmentCreatedMail($appointment, $appointment->patient->user->name));
+            }
+            
+            // Pausa MAyor para evitar el límite agresivo de Mailtrap
+            sleep(4);
 
-        // Send email to doctor
-        if ($appointment->doctor && $appointment->doctor->user && $appointment->doctor->user->email) {
-            \Illuminate\Support\Facades\Mail::to($appointment->doctor->user->email)
-                ->send(new \App\Mail\AppointmentCreatedMail($appointment, 'Dr(a). ' . $appointment->doctor->user->name));
+            // Send email to doctor
+            if ($appointment->doctor && $appointment->doctor->user && $appointment->doctor->user->email) {
+                \Illuminate\Support\Facades\Mail::to($appointment->doctor->user->email)
+                    ->send(new \App\Mail\AppointmentCreatedMail($appointment, 'Dr(a). ' . $appointment->doctor->user->name));
+            }
+        } catch (\Exception $e) {
+            // Ignorar el error de "Demasiados emails" de Mailtrap para que no rompa la aplicación local
+            \Illuminate\Support\Facades\Log::error('Mailtrap error de cuota: ' . $e->getMessage());
         }
 
         return redirect()->route('admin.appointments.index')

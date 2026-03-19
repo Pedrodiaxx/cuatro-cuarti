@@ -24,6 +24,8 @@ Schedule::call(function () {
     $appointmentsByDoctor = $appointments->groupBy('doctor_id');
 
     foreach ($appointmentsByDoctor as $doctorId => $doctorAppointments) {
+        sleep(2); // Evitar el límite de peticiones de Mailtrap
+        
         $doctor = $doctorAppointments->first()->doctor;
         if ($doctor && $doctor->user && $doctor->user->email) {
             Mail::to($doctor->user->email)->send(
