@@ -22,6 +22,20 @@
       </div>
   @endif
 
+  @if(session('download_pdf'))
+      <script>
+          document.addEventListener('DOMContentLoaded', function() {
+              const link = document.createElement('a');
+              link.href = "{{ session('download_pdf') }}";
+              link.setAttribute('download', 'comprobante_cita.pdf');
+              link.setAttribute('target', '_blank');
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+          });
+      </script>
+  @endif
+
   <div class="bg-white shadow rounded-lg overflow-x-auto border border-gray-200">
     <table class="w-full text-sm text-left text-gray-600 min-w-max">
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">

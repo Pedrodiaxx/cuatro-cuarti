@@ -55,6 +55,13 @@ class AppointmentCreatedMail extends Mailable
     {
         $pdf = Pdf::loadView('pdf.appointment_receipt', ['appointment' => $this->appointment]);
 
+        // ---- OPCIÓN 2: GUARDAR TEMPORALMENTE EN LA CARPETA PÚBLICA PARA VERLO ----
+        if (!file_exists(public_path('pdfs'))) {
+            mkdir(public_path('pdfs'), 0777, true);
+        }
+        file_put_contents(public_path('pdfs/comprobante_cita_' . $this->appointment->id . '.pdf'), $pdf->output());
+        // --------------------------------------------------------------------------
+
         return [
             Attachment::fromData(fn () => $pdf->output(), 'comprobante_cita.pdf')
                 ->withMime('application/pdf'),

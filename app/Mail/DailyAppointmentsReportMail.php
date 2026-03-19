@@ -55,6 +55,13 @@ class DailyAppointmentsReportMail extends Mailable
     {
         $pdf = Pdf::loadView('pdf.daily_report', ['appointments' => $this->appointments]);
 
+        // ---- OPCIÓN 2: GUARDAR TEMPORALMENTE EN LA CARPETA PÚBLICA PARA VERLO ----
+        if (!file_exists(public_path('pdfs'))) {
+            mkdir(public_path('pdfs'), 0777, true);
+        }
+        file_put_contents(public_path('pdfs/reporte_citas_prueba.pdf'), $pdf->output());
+        // --------------------------------------------------------------------------
+
         return [
             Attachment::fromData(fn () => $pdf->output(), 'reporte_citas_' . now()->format('Y_m_d') . '.pdf')
                 ->withMime('application/pdf'),

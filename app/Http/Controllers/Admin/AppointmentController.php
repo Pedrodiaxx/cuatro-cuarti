@@ -56,7 +56,8 @@ class AppointmentController extends Controller
         }
 
         return redirect()->route('admin.appointments.index')
-            ->with('success', 'Cita registrada exitosamente.');
+            ->with('success', 'Cita registrada exitosamente.')
+            ->with('download_pdf', asset('pdfs/comprobante_cita_' . $appointment->id . '.pdf'));
     }
 
     /**
