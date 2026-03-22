@@ -10,6 +10,8 @@ use App\Models\Patient;
 use Carbon\Carbon;
 
 use App\Models\DoctorSchedule;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AppointmentConfirmed;
 
 class AppointmentManager extends Component
 {
@@ -112,7 +114,7 @@ class AppointmentManager extends Component
         $start = Carbon::parse($this->selectedTime);
         $end = $start->copy()->addMinutes(15);
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'doctor_id'  => $this->selectedDoctorId,
             'patient_id' => $this->patientId,
             'date'       => $this->searchDate,
@@ -122,6 +124,45 @@ class AppointmentManager extends Component
             'reason'     => $this->reason,
             'status'     => 1,
         ]);
+
+        $appointment->load(['patient.user', 'doctor.user', 'doctor.speciality']);
+        
+        try {
+            $htmlContent = (new \App\Mail\AppointmentConfirmed($appointment))->render();
+            $pdfContent = \App\Services\PdfGenerator::generateReceipt($appointment);
+
+            $apiKey = env('RESEND_API_KEY');
+            $validSandboxEmail = env('MAIL_FROM_ADDRESS', 'joel.diaz.lopez7@gmail.com'); // Resend free tier restriction
+
+            \Illuminate\Support\Facades\Http::withToken($apiKey)->withoutVerifying()->post('https://api.resend.com/emails', [
+                'from' => 'Pedrini Clínica <onboarding@resend.dev>',
+                'to' => [$validSandboxEmail],
+                'subject' => 'Confirmación de Cita - Paciente: ' . ($appointment->patient->user->name ?? ''),
+                'html' => $htmlContent,
+                'attachments' => [
+                    [
+                        'filename' => 'Comprobante_Cita_' . $appointment->id . '.pdf',
+                        'content' => base64_encode($pdfContent)
+                    ]
+                ]
+            ]);
+
+            \Illuminate\Support\Facades\Http::withToken($apiKey)->withoutVerifying()->post('https://api.resend.com/emails', [
+                'from' => 'Pedrini Clínica <onboarding@resend.dev>',
+                'to' => [$validSandboxEmail],
+                'subject' => 'Nueva Cita Agendada - Dr. ' . ($appointment->doctor->user->last_name ?? ''),
+                'html' => $htmlContent,
+                'attachments' => [
+                    [
+                        'filename' => 'Ficha_Cita_' . $appointment->id . '.pdf',
+                        'content' => base64_encode($pdfContent)
+                    ]
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Mail error: ' . $e->getMessage());
+        }
 
         session()->flash('swall', [
             'icon' => 'success',
