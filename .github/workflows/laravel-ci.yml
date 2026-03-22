@@ -17,5 +17,9 @@ jobs:
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
     - name: Generate key
       run: php artisan key:generate
+    - name: Install NPM dependencies
+      run: npm ci
+    - name: Build assets for Vite
+      run: npm run build
     - name: Execute tests
       run: php artisan test
