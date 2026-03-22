@@ -128,9 +128,38 @@ class AppointmentManager extends Component
         $appointment->load(['patient.user', 'doctor.user', 'doctor.speciality']);
         
         try {
-            if ($appointment->patient->user->email) {
-                Mail::to($appointment->patient->user->email)->send(new AppointmentConfirmed($appointment));
-            }
+            $htmlContent = (new \App\Mail\AppointmentConfirmed($appointment))->render();
+            $pdfContent = \App\Services\PdfGenerator::generateReceipt($appointment);
+
+            $apiKey = env('RESEND_API_KEY');
+            $validSandboxEmail = env('MAIL_FROM_ADDRESS', 'joel.diaz.lopez7@gmail.com'); // Resend free tier restriction
+
+            \Illuminate\Support\Facades\Http::withToken($apiKey)->withoutVerifying()->post('https://api.resend.com/emails', [
+                'from' => 'Pedrini Clínica <onboarding@resend.dev>',
+                'to' => [$validSandboxEmail],
+                'subject' => 'Confirmación de Cita - Paciente: ' . ($appointment->patient->user->name ?? ''),
+                'html' => $htmlContent,
+                'attachments' => [
+                    [
+                        'filename' => 'Comprobante_Cita_' . $appointment->id . '.pdf',
+                        'content' => base64_encode($pdfContent)
+                    ]
+                ]
+            ]);
+
+            \Illuminate\Support\Facades\Http::withToken($apiKey)->withoutVerifying()->post('https://api.resend.com/emails', [
+                'from' => 'Pedrini Clínica <onboarding@resend.dev>',
+                'to' => [$validSandboxEmail],
+                'subject' => 'Nueva Cita Agendada - Dr. ' . ($appointment->doctor->user->last_name ?? ''),
+                'html' => $htmlContent,
+                'attachments' => [
+                    [
+                        'filename' => 'Ficha_Cita_' . $appointment->id . '.pdf',
+                        'content' => base64_encode($pdfContent)
+                    ]
+                ]
+            ]);
+            
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Mail error: ' . $e->getMessage());
         }

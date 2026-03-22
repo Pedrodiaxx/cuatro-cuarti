@@ -29,4 +29,12 @@ Route::middleware([
     
     // Doctor Schedules
     Route::get('/doctors/{doctor}/schedule', \App\Livewire\Admin\DoctorScheduleManager::class)->name('doctors.schedule');
+    
+    Route::get('/preview-email', function () {
+        $appointment = \App\Models\Appointment::with(['patient.user', 'doctor.user', 'doctor.speciality'])->latest()->first();
+        if (!$appointment) {
+            return "No hay citas creadas para visualizar el correo.";
+        }
+        return new \App\Mail\AppointmentConfirmed($appointment);
+    });
 });

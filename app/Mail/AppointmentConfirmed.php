@@ -10,7 +10,6 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class AppointmentConfirmed extends Mailable
 {
@@ -53,12 +52,6 @@ class AppointmentConfirmed extends Mailable
      */
     public function attachments(): array
     {
-        // Generate PDF
-        $pdf = Pdf::loadView('pdf.appointment-receipt', ['appointment' => $this->appointment]);
-        
-        return [
-            Attachment::fromData(fn () => $pdf->output(), 'Comprobante_Cita_' . $this->appointment->id . '.pdf')
-                ->withMime('application/pdf'),
-        ];
+        return [];
     }
 }
