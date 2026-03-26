@@ -85,7 +85,7 @@ class PatientController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|mimes:csv,xlsx,xls,txt|max:51200', // max 50MB
+            'import_file' => 'required|mimes:csv,txt|max:51200', // max 50MB
         ]);
 
         $filePath = $request->file('import_file')->store('imports');
