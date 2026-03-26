@@ -85,12 +85,14 @@ class PatientController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'import_file' => 'required|mimes:csv,txt|max:51200', // max 50MB
+            'import_file' => 'required|mimes:csv,txt,xlsx,xls|max:51200', // max 50MB
         ]);
 
+        // Get extension to pass to the job
+        $extension = $request->file('import_file')->getClientOriginalExtension();
         $filePath = $request->file('import_file')->store('imports');
 
-        \App\Jobs\ImportPatientsJob::dispatch($filePath);
+        \App\Jobs\ImportPatientsJob::dispatch($filePath, $extension);
 
         session()->flash('swal', [
             'icon' => 'success',
