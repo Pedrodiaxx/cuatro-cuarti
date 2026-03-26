@@ -71,7 +71,9 @@ class ImportPatientsJob implements ShouldQueue
 
         if ($totalRows > 0) {
             $header = array_shift($rows);
-            $header = array_map(function($h) { return strtolower(trim((string)$h)); }, $header);
+            $header = array_map(function($h) { 
+                return str_replace(' ', '_', strtolower(trim((string)$h))); 
+            }, $header);
             
             $processed = 0;
 
