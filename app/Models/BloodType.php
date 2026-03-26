@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BloodType extends Model
 {
+    protected $fillable = ['name'];
     //Relacion uno a muchos
     public function patients(){
         return $this->hasMany(Patient::class);
