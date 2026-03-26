@@ -82,13 +82,13 @@ class ImportPatientsJob implements ShouldQueue
                 }
                 
                 $data = array_combine($header, $row);
-                // Nombres de columna permisivos
+                // Nombres de columna permisivos y exactos basados en el repo comprobado
                 $email = $data['email'] ?? $data['correo'] ?? $data['correo_electronico'] ?? $data['e-mail'] ?? null;
-                $name = $data['name'] ?? $data['nombre'] ?? $data['nombres'] ?? $data['paciente'] ?? null;
+                $name = $data['nombre_completo'] ?? $data['name'] ?? $data['nombre'] ?? $data['nombres'] ?? $data['paciente'] ?? 'Sin Nombre';
 
-                if (!empty($email) && !empty($name)) {
+                if (!empty($email)) {
 
-                    $idNumber = $data['id_number'] ?? $data['cedula'] ?? (string) Str::uuid();
+                    $idNumber = $data['id_number'] ?? $data['numero_de_id'] ?? $data['cedula'] ?? ('CSV-' . uniqid());
 
                     $user = User::firstOrCreate(
                         ['email' => $email],
@@ -96,15 +96,22 @@ class ImportPatientsJob implements ShouldQueue
                             'name' => $name,
                             'password' => Hash::make($idNumber),
                             'id_number' => $idNumber,
-                            'phone' => $data['phone'] ?? $data['telefono'] ?? '0000000000',
-                            'address' => $data['address'] ?? $data['direccion'] ?? 'Sin dirección',
+                            'phone' => $data['telefono'] ?? $data['phone'] ?? '0000000000',
+                            'address' => $data['direccion'] ?? $data['address'] ?? 'No registrada',
                         ]
                     );
 
-                    $btName = $data['blood_type'] ?? $data['tipo_sangre'] ?? $data['blood_type_id'] ?? null;
+                    // Requisito detectado: Asignar rol de paciente si existe
+                    if (method_exists($user, 'assignRole')) {
+                        try {
+                            $user->assignRole('paciente');
+                        } catch (\Throwable $th) {}
+                    }
+
+                    $btName = $data['tipo_sangre'] ?? $data['blood_type'] ?? $data['blood_type_id'] ?? null;
                     $bloodTypeId = null;
                     if (!empty($btName)) {
-                        $bloodType = BloodType::firstOrCreate(['name' => strtoupper($btName)]);
+                        $bloodType = BloodType::firstOrCreate(['name' => strtoupper(trim($btName))]);
                         $bloodTypeId = $bloodType->id;
                     }
 
