@@ -149,28 +149,14 @@ class ImportPatientsJob implements ShouldQueue
             mkdir($extractDir, 0777, true);
         }
 
-        $extractionSuccess = false;
-
-        // Intentar usar ZipArchive si la extensión existe
-        if (class_exists('ZipArchive')) {
-            $zip = new \ZipArchive;
-            if ($zip->open($filePath) === true) {
-                // Solo necesitamos extraer xl/sharedStrings.xml y xl/worksheets/sheet1.xml pero podemos extraer todo xl
-                $zip->extractTo($extractDir, ['xl/sharedStrings.xml', 'xl/worksheets/sheet1.xml']);
-                $zip->close();
-                $extractionSuccess = true;
-            }
-        } else {
-            // FALLBACK MAGISTRAL: Usar powershell para descomprimir en caso de que Laragon bloquee el ZipArchive
-            $psCmd = 'powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path \'' . $filePath . '\' -DestinationPath \'' . $extractDir . '\' -Force"';
-            exec($psCmd);
-            $extractionSuccess = true;
-        }
-
+        // FALLBACK MAGISTRAL: Usar powershell incondicionalmente para evitar el fantasma de ZipArchive
+        $psCmd = 'powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path \'' . escapeshellarg(realpath($filePath)) . '\' -DestinationPath \'' . escapeshellarg(realpath(storage_path('app/imports'))) . '\\' . basename($extractDir) . '\' -Force"';
+        exec($psCmd);
+        
         $sharedStringsPath = $extractDir . '/xl/sharedStrings.xml';
         $sheetPath = $extractDir . '/xl/worksheets/sheet1.xml';
 
-        if ($extractionSuccess && file_exists($sheetPath)) {
+        if (file_exists($sheetPath)) {
             $sharedStrings = [];
             
             if (file_exists($sharedStringsPath)) {
