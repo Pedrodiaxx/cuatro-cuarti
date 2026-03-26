@@ -12,6 +12,7 @@ use App\Models\Patient;
 use App\Models\BloodType;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class ImportPatientsJob implements ShouldQueue
@@ -20,14 +21,16 @@ class ImportPatientsJob implements ShouldQueue
 
     protected $filePath;
     protected $extension;
+    protected $importId;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($filePath, $extension = 'csv')
+    public function __construct($filePath, $extension = 'csv', $importId = '')
     {
         $this->filePath = $filePath;
         $this->extension = strtolower($extension);
+        $this->importId = $importId;
     }
 
     /**
@@ -37,7 +40,10 @@ class ImportPatientsJob implements ShouldQueue
     {
         $file = Storage::path($this->filePath);
         
-        if (!file_exists($file)) return;
+        if (!file_exists($file)) {
+            if ($this->importId) Cache::put("import_{$this->importId}", ['progress' => 100, 'status' => 'error'], 3600);
+            return;
+        }
 
         $rows = [];
         
@@ -70,11 +76,15 @@ class ImportPatientsJob implements ShouldQueue
             fclose($handle);
         }
 
-        if (count($rows) > 1) {
+        $totalRows = count($rows) - 1; // quitamos el header
+
+        if ($totalRows > 0) {
             $header = array_shift($rows);
             // Trim y lower a los headers para asegurar la consistencia
             $header = array_map(function($h) { return strtolower(trim((string)$h)); }, $header);
             
+            $processed = 0;
+
             foreach ($rows as $row) {
                 if (count($header) !== count($row)) {
                     $row = array_pad($row, count($header), null);
@@ -87,47 +97,56 @@ class ImportPatientsJob implements ShouldQueue
                 $email = $data['email'] ?? $data['correo'] ?? null;
                 $name = $data['name'] ?? $data['nombre'] ?? null;
 
-                if (empty($email) || empty($name)) {
-                    continue;
+                if (!empty($email) && !empty($name)) {
+
+                    $idNumber = $data['id_number'] ?? $data['cedula'] ?? (string) Str::uuid();
+
+                    $user = User::firstOrCreate(
+                        ['email' => $email],
+                        [
+                            'name' => $name,
+                            'password' => Hash::make($idNumber),
+                            'id_number' => $idNumber,
+                            'phone' => $data['phone'] ?? $data['telefono'] ?? '0000000000',
+                            'address' => $data['address'] ?? $data['direccion'] ?? 'Sin dirección',
+                        ]
+                    );
+
+                    $btName = $data['blood_type'] ?? $data['tipo_sangre'] ?? $data['blood_type_id'] ?? null;
+                    $bloodTypeId = null;
+                    if (!empty($btName)) {
+                        $bloodType = BloodType::firstOrCreate(['name' => strtoupper($btName)]);
+                        $bloodTypeId = $bloodType->id;
+                    }
+
+                    if (!$user->patient) {
+                        Patient::create([
+                            'user_id' => $user->id,
+                            'blood_type_id' => $bloodTypeId,
+                            'allergies' => $data['allergies'] ?? $data['alergias'] ?? null,
+                            'chronic_conditions' => $data['chronic_conditions'] ?? $data['condiciones_cronicas'] ?? null,
+                            'surgical_history' => $data['surgical_history'] ?? $data['historial_quirurgico'] ?? null,
+                            'family_history' => $data['family_history'] ?? $data['antecedentes_familiares'] ?? null,
+                            'observations' => $data['observations'] ?? $data['observaciones'] ?? null,
+                            'emergency_contact_name' => $data['emergency_contact_name'] ?? $data['contacto_emergencia_nombre'] ?? null,
+                            'emergency_contact_phone' => $data['emergency_contact_phone'] ?? $data['contacto_emergencia_telefono'] ?? null,
+                            'emergency_contact_relationship' => $data['emergency_contact_relationship'] ?? $data['contacto_emergencia_relacion'] ?? null,
+                        ]);
+                    }
                 }
 
-                $idNumber = $data['id_number'] ?? $data['cedula'] ?? (string) Str::uuid();
-
-                $user = User::firstOrCreate(
-                    ['email' => $email],
-                    [
-                        'name' => $name,
-                        'password' => Hash::make($idNumber),
-                        'id_number' => $idNumber,
-                        'phone' => $data['phone'] ?? $data['telefono'] ?? '0000000000',
-                        'address' => $data['address'] ?? $data['direccion'] ?? 'Sin dirección',
-                    ]
-                );
-
-                $btName = $data['blood_type'] ?? $data['tipo_sangre'] ?? $data['blood_type_id'] ?? null;
-                $bloodTypeId = null;
-                if (!empty($btName)) {
-                    $bloodType = BloodType::firstOrCreate(['name' => strtoupper($btName)]);
-                    $bloodTypeId = $bloodType->id;
-                }
-
-                if (!$user->patient) {
-                    Patient::create([
-                        'user_id' => $user->id,
-                        'blood_type_id' => $bloodTypeId,
-                        'allergies' => $data['allergies'] ?? $data['alergias'] ?? null,
-                        'chronic_conditions' => $data['chronic_conditions'] ?? $data['condiciones_cronicas'] ?? null,
-                        'surgical_history' => $data['surgical_history'] ?? $data['historial_quirurgico'] ?? null,
-                        'family_history' => $data['family_history'] ?? $data['antecedentes_familiares'] ?? null,
-                        'observations' => $data['observations'] ?? $data['observaciones'] ?? null,
-                        'emergency_contact_name' => $data['emergency_contact_name'] ?? $data['contacto_emergencia_nombre'] ?? null,
-                        'emergency_contact_phone' => $data['emergency_contact_phone'] ?? $data['contacto_emergencia_telefono'] ?? null,
-                        'emergency_contact_relationship' => $data['emergency_contact_relationship'] ?? $data['contacto_emergencia_relacion'] ?? null,
-                    ]);
+                $processed++;
+                if ($this->importId && ($processed % 5 === 0 || $processed === $totalRows)) {
+                    $progress = min(100, round(($processed / $totalRows) * 100));
+                    Cache::put("import_{$this->importId}", ['progress' => $progress, 'status' => 'running'], 3600);
                 }
             }
         }
         
+        if ($this->importId) {
+            Cache::put("import_{$this->importId}", ['progress' => 100, 'status' => 'completed'], 3600);
+        }
+
         // Delete the file after processing
         if (Storage::exists($this->filePath)) {
             Storage::delete($this->filePath);

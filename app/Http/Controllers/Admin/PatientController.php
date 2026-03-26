@@ -91,16 +91,25 @@ class PatientController extends Controller
         // Get extension to pass to the job
         $extension = $request->file('import_file')->getClientOriginalExtension();
         $filePath = $request->file('import_file')->store('imports');
+        
+        $importId = uniqid('import_');
+        \Illuminate\Support\Facades\Cache::put("import_{$importId}", ['progress' => 0, 'status' => 'pending'], 3600);
 
-        \App\Jobs\ImportPatientsJob::dispatch($filePath, $extension);
+        \App\Jobs\ImportPatientsJob::dispatch($filePath, $extension, $importId);
 
-        session()->flash('swal', [
-            'icon' => 'success',
-            'title' => '¡Importación iniciada!',
-            'text' => 'El archivo se está procesando en segundo plano. Los pacientes aparecerán pronto.',
-        ]);
-
-        return redirect()->route('admin.patients.index');
+        return redirect()->route('admin.patients.index')->with('import_id', $importId);
+    }
+    
+    /**
+     * Get the live status of the background import
+     */
+    public function importStatus(Request $request)
+    {
+        $importId = $request->query('id');
+        if (!$importId) return response()->json(['progress' => 0, 'status' => 'error']);
+        
+        $data = \Illuminate\Support\Facades\Cache::get("import_{$importId}", ['progress' => 0, 'status' => 'pending']);
+        return response()->json($data);
     }
 
     /**
