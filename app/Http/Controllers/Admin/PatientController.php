@@ -80,6 +80,28 @@ class PatientController extends Controller
     }
 
     /**
+     * Import patients from Excel/CSV file using a background job.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|mimes:csv,xlsx,xls,txt|max:51200', // max 50MB
+        ]);
+
+        $filePath = $request->file('import_file')->store('imports');
+
+        \App\Jobs\ImportPatientsJob::dispatch($filePath);
+
+        session()->flash('swal', [
+            'icon' => 'success',
+            'title' => '¡Importación iniciada!',
+            'text' => 'El archivo se está procesando en segundo plano. Los pacientes aparecerán pronto.',
+        ]);
+
+        return redirect()->route('admin.patients.index');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Patient $patient)

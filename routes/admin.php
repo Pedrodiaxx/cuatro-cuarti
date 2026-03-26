@@ -24,6 +24,7 @@ Route::get('/gestion', function () {
 })->name('admin.gestion');
 
 //Gestion de pacientes
+Route::post('patients/import', [PatientController::class, 'import'])->name('patients.import');
 Route::resource('patients', PatientController::class);
 
 //Gestion de doctores
