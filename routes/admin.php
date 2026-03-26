@@ -18,6 +18,8 @@ Route::resource('roles', RoleController::class);
 Route::resource('users', UserController::class);
 
 // Gestión de pacientes
+Route::get('patients/import/progress', [PatientController::class, 'progress'])->name('patients.import.progress');
+Route::post('patients/import', [PatientController::class, 'import'])->name('patients.import');
 Route::resource('patients', PatientController::class);
 
 // 🔥 DOCTORES (SIN ->names y SIN prefix)
