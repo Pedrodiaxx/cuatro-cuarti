@@ -82,9 +82,9 @@ class ImportPatientsJob implements ShouldQueue
                 }
                 
                 $data = array_combine($header, $row);
-                
-                $email = $data['email'] ?? $data['correo'] ?? null;
-                $name = $data['name'] ?? $data['nombre'] ?? null;
+                // Nombres de columna permisivos
+                $email = $data['email'] ?? $data['correo'] ?? $data['correo_electronico'] ?? $data['e-mail'] ?? null;
+                $name = $data['name'] ?? $data['nombre'] ?? $data['nombres'] ?? $data['paciente'] ?? null;
 
                 if (!empty($email) && !empty($name)) {
 
@@ -145,12 +145,10 @@ class ImportPatientsJob implements ShouldQueue
     {
         $rows = [];
         $extractDir = storage_path('app/imports/temp_' . uniqid());
-        if (!file_exists($extractDir)) {
-            mkdir($extractDir, 0777, true);
-        }
-
         // FALLBACK MAGISTRAL: Usar powershell incondicionalmente para evitar el fantasma de ZipArchive
-        $psCmd = 'powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path \'' . escapeshellarg(realpath($filePath)) . '\' -DestinationPath \'' . escapeshellarg(realpath(storage_path('app/imports'))) . '\\' . basename($extractDir) . '\' -Force"';
+        $extractDirStr = storage_path('app/imports/temp_' . uniqid());
+        $extractDir = realpath(storage_path('app/imports')) . DIRECTORY_SEPARATOR . basename($extractDirStr);
+        $psCmd = 'powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path \'' . realpath($filePath) . '\' -DestinationPath \'' . $extractDir . '\' -Force"';
         exec($psCmd);
         
         $sharedStringsPath = $extractDir . '/xl/sharedStrings.xml';
