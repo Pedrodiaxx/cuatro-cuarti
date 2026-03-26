@@ -23,9 +23,6 @@ class ImportPatientsJob implements ShouldQueue
     protected $extension;
     protected $importId;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct($filePath, $extension = 'csv', $importId = '')
     {
         $this->filePath = $filePath;
@@ -33,9 +30,6 @@ class ImportPatientsJob implements ShouldQueue
         $this->importId = $importId;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         $file = Storage::path($this->filePath);
@@ -50,16 +44,13 @@ class ImportPatientsJob implements ShouldQueue
         if (in_array($this->extension, ['xls', 'xlsx'])) {
             $rows = $this->parseXlsx($file);
         } else {
-            // Parse CSV natively
             $content = file_get_contents($file);
-            // Limpiar BOM characters
             $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
             file_put_contents($file, $content);
 
             $handle = fopen($file, 'r');
             $header = fgetcsv($handle, 1000, ',');
             
-            // Determinar delimitador
             $delimiter = ',';
             if($header && count($header) == 1 && strpos($header[0], ';') !== false) {
                 rewind($handle);
@@ -68,7 +59,7 @@ class ImportPatientsJob implements ShouldQueue
             }
 
             if ($header) {
-                $rows[] = $header; // include header as first row for consistency
+                $rows[] = $header; 
                 while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
                     $rows[] = $row;
                 }
@@ -76,11 +67,10 @@ class ImportPatientsJob implements ShouldQueue
             fclose($handle);
         }
 
-        $totalRows = count($rows) - 1; // quitamos el header
+        $totalRows = count($rows) - 1; 
 
         if ($totalRows > 0) {
             $header = array_shift($rows);
-            // Trim y lower a los headers para asegurar la consistencia
             $header = array_map(function($h) { return strtolower(trim((string)$h)); }, $header);
             
             $processed = 0;
@@ -93,7 +83,6 @@ class ImportPatientsJob implements ShouldQueue
                 
                 $data = array_combine($header, $row);
                 
-                // Nombres de columna permisivos
                 $email = $data['email'] ?? $data['correo'] ?? null;
                 $name = $data['name'] ?? $data['nombre'] ?? null;
 
@@ -147,23 +136,45 @@ class ImportPatientsJob implements ShouldQueue
             Cache::put("import_{$this->importId}", ['progress' => 100, 'status' => 'completed'], 3600);
         }
 
-        // Delete the file after processing
         if (Storage::exists($this->filePath)) {
             Storage::delete($this->filePath);
         }
     }
 
-    /**
-     * Natively parse .xlsx logic with ZipArchive
-     */
     protected function parseXlsx($filePath)
     {
         $rows = [];
-        $zip = new \ZipArchive;
-        if ($zip->open($filePath) === true) {
+        $extractDir = storage_path('app/imports/temp_' . uniqid());
+        if (!file_exists($extractDir)) {
+            mkdir($extractDir, 0777, true);
+        }
+
+        $extractionSuccess = false;
+
+        // Intentar usar ZipArchive si la extensión existe
+        if (class_exists('ZipArchive')) {
+            $zip = new \ZipArchive;
+            if ($zip->open($filePath) === true) {
+                // Solo necesitamos extraer xl/sharedStrings.xml y xl/worksheets/sheet1.xml pero podemos extraer todo xl
+                $zip->extractTo($extractDir, ['xl/sharedStrings.xml', 'xl/worksheets/sheet1.xml']);
+                $zip->close();
+                $extractionSuccess = true;
+            }
+        } else {
+            // FALLBACK MAGISTRAL: Usar powershell para descomprimir en caso de que Laragon bloquee el ZipArchive
+            $psCmd = 'powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path \'' . $filePath . '\' -DestinationPath \'' . $extractDir . '\' -Force"';
+            exec($psCmd);
+            $extractionSuccess = true;
+        }
+
+        $sharedStringsPath = $extractDir . '/xl/sharedStrings.xml';
+        $sheetPath = $extractDir . '/xl/worksheets/sheet1.xml';
+
+        if ($extractionSuccess && file_exists($sheetPath)) {
             $sharedStrings = [];
-            if (($index = $zip->locateName('xl/sharedStrings.xml')) !== false) {
-                $xmlString = $zip->getFromIndex($index);
+            
+            if (file_exists($sharedStringsPath)) {
+                $xmlString = file_get_contents($sharedStringsPath);
                 $xml = @simplexml_load_string($xmlString);
                 if ($xml && isset($xml->si)) {
                     foreach ($xml->si as $val) {
@@ -182,47 +193,62 @@ class ImportPatientsJob implements ShouldQueue
                 }
             }
             
-            // Locate the first worksheet
-            $sheetPath = 'xl/worksheets/sheet1.xml';
-            if (($index = $zip->locateName($sheetPath)) !== false) {
-                $xmlString = $zip->getFromIndex($index);
-                $xml = @simplexml_load_string($xmlString);
-                if ($xml && isset($xml->sheetData->row)) {
-                    foreach ($xml->sheetData->row as $row) {
-                        $rowData = [];
-                        $colIndex = 0;
-                        if (isset($row->c)) {
-                            foreach ($row->c as $c) {
-                                $r = (string)$c['r'];
-                                preg_match('/([A-Z]+)(\d+)/', $r, $matches);
-                                if (!empty($matches[1])) {
-                                    $letters = str_split($matches[1]);
-                                    $idx = 0;
-                                    foreach($letters as $char) {
-                                        $idx = $idx * 26 + (ord($char) - 64);
-                                    }
-                                    $idx--; // zero based column index
-                                    
-                                    while ($colIndex < $idx) {
-                                        $rowData[] = null;
-                                        $colIndex++;
-                                    }
+            $xmlString = file_get_contents($sheetPath);
+            $xml = @simplexml_load_string($xmlString);
+            if ($xml && isset($xml->sheetData->row)) {
+                foreach ($xml->sheetData->row as $row) {
+                    $rowData = [];
+                    $colIndex = 0;
+                    if (isset($row->c)) {
+                        foreach ($row->c as $c) {
+                            $r = (string)$c['r'];
+                            preg_match('/([A-Z]+)(\d+)/', $r, $matches);
+                            if (!empty($matches[1])) {
+                                $letters = str_split($matches[1]);
+                                $idx = 0;
+                                foreach($letters as $char) {
+                                    $idx = $idx * 26 + (ord($char) - 64);
                                 }
-
-                                $val = (string)$c->v;
-                                if (isset($c['t']) && (string)$c['t'] == 's') {
-                                    $val = $sharedStrings[(int)$val] ?? '';
+                                $idx--; 
+                                
+                                while ($colIndex < $idx) {
+                                    $rowData[] = null;
+                                    $colIndex++;
                                 }
-                                $rowData[] = $val;
-                                $colIndex++;
                             }
+
+                            $val = (string)$c->v;
+                            if (isset($c['t']) && (string)$c['t'] == 's') {
+                                $val = $sharedStrings[(int)$val] ?? '';
+                            }
+                            $rowData[] = $val;
+                            $colIndex++;
                         }
-                        $rows[] = $rowData;
                     }
+                    $rows[] = $rowData;
                 }
             }
-            $zip->close();
         }
+
+        $this->deleteDirectory($extractDir);
         return $rows;
+    }
+
+    protected function deleteDirectory($dir) {
+        if (!file_exists($dir)) {
+            return true;
+        }
+        if (!is_dir($dir)) {
+            return unlink($dir);
+        }
+        foreach (scandir($dir) as $item) {
+            if ($item == '.' || $item == '..') {
+                continue;
+            }
+            if (!$this->deleteDirectory($dir . DIRECTORY_SEPARATOR . $item)) {
+                return false;
+            }
+        }
+        return rmdir($dir);
     }
 }
