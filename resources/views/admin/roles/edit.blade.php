@@ -1,4 +1,4 @@
-<x-admin-layout title="Roles | Meditime"
+<x-admin-layout title="Roles | Pedrini"
                 :breadcrumbs="[
     [
       'name' => 'Dashboard',

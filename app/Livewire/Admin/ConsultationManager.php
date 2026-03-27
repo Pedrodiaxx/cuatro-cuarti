@@ -110,7 +110,7 @@ class ConsultationManager extends Component
     public function render()
     {
         return view('livewire.admin.consultation-manager')->layout('layouts.admin', [
-            'title' => 'Consulta | Meditime',
+            'title' => 'Consulta | Pedrini',
             'breadcrumbs' => [
                 ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
                 ['name' => 'Citas', 'href' => route('admin.appointments.index')],

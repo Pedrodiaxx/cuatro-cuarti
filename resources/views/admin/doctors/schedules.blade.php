@@ -1,4 +1,4 @@
-<x-admin-layout title="Horarios de Doctor | Meditime"
+<x-admin-layout title="Horarios de Doctor | Pedrini"
 :breadcrumbs="[
     [
         'name' => 'Dashboard',

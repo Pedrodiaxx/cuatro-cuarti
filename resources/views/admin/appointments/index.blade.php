@@ -1,4 +1,4 @@
-<x-admin-layout title="Citas | Meditime"
+<x-admin-layout title="Citas | Pedrini"
 :breadcrumbs="[
     [
         'name' => 'Dashboard',

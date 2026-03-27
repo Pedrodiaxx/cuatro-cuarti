@@ -1,4 +1,4 @@
-<x-admin-layout title="Doctores | Meditime"
+<x-admin-layout title="Doctores | Pedrini"
 :breadcrumbs="[
     [
         'name' => 'Dashboard',

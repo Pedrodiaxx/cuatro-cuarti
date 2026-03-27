@@ -1,4 +1,4 @@
-<x-admin-layout title="Doctores | Meditime"
+<x-admin-layout title="Doctores | Pedrini"
     :breadcrumbs="[
         ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
         ['name' => 'Doctores', 'href' => route('admin.doctors.index')],

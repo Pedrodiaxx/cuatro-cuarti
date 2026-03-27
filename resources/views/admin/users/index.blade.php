@@ -1,4 +1,4 @@
-<x-admin-layout title="Usuarios | Meditime"
+<x-admin-layout title="Usuarios | Pedrini"
 :breadcrumbs="[
     ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
     ['name' => 'Usuarios', 'href' => route('admin.users.index')],

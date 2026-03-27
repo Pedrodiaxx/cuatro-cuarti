@@ -1,4 +1,4 @@
-<x-admin-layout title="Nueva Cita | Meditime"
+<x-admin-layout title="Nueva Cita | Pedrini"
 :breadcrumbs="[
     [
         'name' => 'Dashboard',
