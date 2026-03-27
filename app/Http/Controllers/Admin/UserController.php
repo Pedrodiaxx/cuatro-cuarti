@@ -25,50 +25,71 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles= Role::all();
+        $roles = Role::all();
         return view('admin.users.create', compact('roles'));
     }
 
     /**
-     * Guarda un nuevo usuario (temporalmente vacío).
+     * Guarda un nuevo usuario
      */
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'name' => 'required|string|min:3|max:255',
-        'email' => 'required|string|email|unique:users',
-        'password' => 'required|string|min:8|confirmed',
-        'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users',
-        'phone' => 'required|digits_between:7,15',
-        'address' => 'required|string|min:3|max:255',
-        'role_id' => 'required|exists:roles,id',
-    ]);
+    {
+        $data = $request->validate([
+            'name' => 'required|string|min:3|max:255',
+            'email' => 'required|string|email|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users',
+            'phone' => 'required|digits_between:7,15', // CORREGIDO
+            'address' => 'required|string|min:3|max:255',
+            'role_id' => 'required|exists:roles,id',
+        ]);
 
-    // 1) Guardar role_id y quitarlo del array del user
-    $roleId = $data['role_id'];
-    unset($data['role_id']);
+        // Encriptar contraseña (CRÍTICO)
+        $data['password'] = bcrypt($data['password']);
 
-    // 2) Hashear password
-    $data['password'] = Hash::make($data['password']);
+        // Crear usuario
+        $user = User::create($data);
 
-    // 3) Crear usuario
-    $user = User::create($data);
+        // Asignar rol
+        $user->roles()->attach($data['role_id']);
 
-    // 4) Asignar rol
-    $user->roles()->attach($roleId);
+        // Obtener el rol seleccionado
+        $role = Role::find($data['role_id']);
 
-    session()->flash('swal', [
-        'icon' => 'success',
-        'title' => 'Usuario creado',
-        'text' => 'El usuario ha sido creado exitosamente.',
-    ]);
+        // 🔥 SI ES DOCTOR → CREAR REGISTRO EN TABLA DOCTORS
+        if ($role && $role->name === 'Doctor') {
+            // Evita duplicados si ya existe
+            if (!$user->doctor) {
+                $user->doctor()->create([
+                    'speciality_id' => null,
+                    'medical_license_number' => null,
+                    'biography' => null,
+                ]);
+            }
+        }
 
-    // 5) Crear módulo automático según rol
-    $roleName = Role::find($roleId)->name;
+        // 🔥 SI ES PACIENTE → CREAR REGISTRO EN TABLA PATIENTS
+        if ($role && $role->name === 'Paciente') {
+            if (!$user->patient) {
+                $patient = $user->patient()->create([]);
 
-    if ($roleName === 'Paciente') {
-        $patient = $user->patient()->firstOrCreate([]);
-        return redirect()->route('admin.patients.edit', $patient);
+                session()->flash('swal', [
+                    'icon' => 'success',
+                    'title' => 'Usuario creado',
+                    'text' => 'Paciente creado exitosamente.',
+                ]);
+
+                return redirect()->route('admin.patients.edit', $patient);
+            }
+        }
+
+        session()->flash('swal', [
+            'icon' => 'success',
+            'title' => 'Usuario creado',
+            'text' => 'El usuario ha sido creado exitosamente.',
+        ]);
+
+        return redirect()->route('admin.users.index')->with('success', 'Usuario creado exitosamente.');
     }
 
     if ($roleName === 'Doctor') {
@@ -84,83 +105,93 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles= Role::all();
+        $roles = Role::all();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
     /**
-     * Actualiza un usuario existente (temporalmente vacío).
+     * Actualiza un usuario existente
      */
     public function update(Request $request, User $user)
-{
-    $data = $request->validate([
-        'name' => 'required|string|min:3|max:255',
-        'email' => 'required|string|email|unique:users,email,'. $user->id,
-        'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users,id_number,'. $user->id,
-        'phone' => 'required|digits_between:7,15',
-        'address' => 'required|string|min:3|max:255',
-        'role_id'=>'required|exists:roles,id',
-    ]);
+    {
+        $data = $request->validate([
+            'name' => 'required|string|min:3|max:255',
+            'email' => 'required|string|email|unique:users,email,' . $user->id,
+            'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users,id_number,' . $user->id,
+            'phone' => 'required|digits_between:7,15',
+            'address' => 'required|string|min:3|max:255',
+            'role_id' => 'required|exists:roles,id',
+        ]);
 
-    $user->update($data);
+        // Actualizar datos básicos
+        $user->update($data);
 
-    if ($request->filled('password')) {
-        $user->password = bcrypt($request->password);
-        $user->save();
+        // Actualizar contraseña solo si se envía
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
+            $user->save();
+        }
+
+        // Sincronizar rol
+        $user->roles()->sync([$data['role_id']]);
+
+        // Obtener nuevo rol
+        $role = Role::find($data['role_id']);
+
+        // 🔥 SI CAMBIÓ A DOCTOR Y NO EXISTE DOCTOR → CREARLO
+        if ($role && $role->name === 'Doctor') {
+            if (!$user->doctor) {
+                $user->doctor()->create([
+                    'speciality_id' => null,
+                    'medical_license_number' => null,
+                    'biography' => null,
+                ]);
+            }
+        }
+
+        // 🔥 SI CAMBIÓ A PACIENTE Y NO EXISTE PATIENT → CREARLO
+        if ($role && $role->name === 'Paciente') {
+            if (!$user->patient) {
+                $user->patient()->create([]);
+            }
+        }
+
+        session()->flash('swal', [
+            'icon' => 'success',
+            'title' => 'Usuario actualizado',
+            'text' => 'El usuario ha sido actualizado exitosamente.',
+        ]);
+
+        return redirect()->route('admin.users.index')->with('success', 'Usuario actualizado exitosamente.');
     }
 
-    $user->roles()->sync($data['role_id']);
-
-    $roleName = Role::find($data['role_id'])->name;
-
-if ($roleName === 'Paciente') {
-    $patient = $user->patient()->firstOrCreate([]);
-    return redirect()->route('admin.patients.edit', $patient);
-}
-
-if ($roleName === 'Doctor') {
-    $doctor = $user->doctor()->firstOrCreate([]);
-    return redirect()->route('admin.doctors.edit', $doctor);
-}
-
-    session()->flash('swal', [
-        'icon' => 'success',
-        'title' => 'Usuario actualizado',
-        'text' => 'El usuario ha sido actualizado exitosamente.',
-    ]);
-
-    return redirect()->route('admin.users.index')->with('success', 'Usuario actualizado exitosamente.');
-}
-
-
     /**
-     * Elimina un usuario (temporalmente vacío).
+     * Elimina un usuario
      */
     public function destroy(User $user)
     {
-        //No permitir que un usuario se elimine a sí mismo
+        // No permitir que un usuario se elimine a sí mismo
         if (Auth::user()->id === $user->id) {
-             session()->flash('swal', [
-            'icon' => 'error',
-            'title' => 'Usuario no eliminado',
-            'text' => 'El usuario no se puede eliminar',
+            session()->flash('swal', [
+                'icon' => 'error',
+                'title' => 'Usuario no eliminado',
+                'text' => 'No puedes eliminarte a ti mismo.',
             ]);
             abort(403, 'No puedes eliminarte a ti mismo.');
         }
 
-        //Eliminar roles asocioados a un usuario
+        // Eliminar roles asociados
         $user->roles()->detach();
 
-        //Eliminar usuario
+        // Eliminar usuario
         $user->delete();
 
         session()->flash('swal', [
             'icon' => 'success',
             'title' => 'Usuario eliminado',
             'text' => 'El usuario ha sido eliminado exitosamente.',
-            ]);
+        ]);
 
         return redirect()->route('admin.users.index')->with('success', 'Usuario eliminado exitosamente.');
     }
-
 }

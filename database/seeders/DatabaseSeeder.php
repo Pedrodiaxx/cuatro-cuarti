@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
 
             RoleSeeder::class,
             UserSeeder::class,
-            BloodTypeSeeder::class,
-            SpecialitySeeder::class,]);
+            BloodTypeSeeder::class,  
+            SpecialitySeeder::class,      ]);
 
         // User::factory(10)->create();
 

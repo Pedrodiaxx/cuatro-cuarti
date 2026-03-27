@@ -28,6 +28,7 @@ $links = [
         'href' => route('admin.patients.index'),
         'active' => request()->routeIs('admin.patients.*'),
     ],
+
     [
         'name' => 'Doctores',
         'icon' => 'fa-solid fa-user-doctor',
@@ -39,12 +40,6 @@ $links = [
         'icon' => 'fa-solid fa-calendar-check',
         'href' => route('admin.appointments.index'),
         'active' => request()->routeIs('admin.appointments.*'),
-    ],
-    [
-        'name' => 'Sugerencias',
-        'icon' => 'fa-solid fa-inbox',
-        'href' => route('admin.feedbacks.index'),
-        'active' => request()->routeIs('admin.feedbacks.*'),
     ],
 ];
 @endphp

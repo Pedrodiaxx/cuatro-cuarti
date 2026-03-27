@@ -3,72 +3,57 @@
         ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
         ['name' => 'Doctores', 'href' => route('admin.doctors.index')],
         ['name' => 'Editar'],
-    ]"
->
+    ]">
+
     <form action="{{ route('admin.doctors.update', $doctor) }}" method="POST">
         @csrf
         @method('PUT')
 
-        {{-- Header --}}
-        <x-wire-card class="mt-10 mb-6">
-            <div class="lg:flex lg:justify-between lg:items-center">
+        {{-- 🔥 IMPORTANTE: enviar user_id para que pase la validación --}}
+        <input type="hidden" name="user_id" value="{{ $doctor->user_id }}">
 
-                <div class="flex items-center gap-4">
-                    <img src="{{ $doctor->user->profile_photo_url }}"
+        {{-- Header del doctor --}}
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="lg:flex lg:justify-between lg:items-center">
+                
+                {{-- Info del usuario --}}
+                <div class="flex items-center">
+                    <img 
+                        src="{{ $doctor->user->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.$doctor->user->name }}" 
                         alt="{{ $doctor->user->name }}"
                         class="h-20 w-20 rounded-full object-cover object-center">
 
-                    <div>
+                    <div class="ml-4">
                         <p class="text-2xl font-semibold text-gray-900">
                             {{ $doctor->user->name }}
                         </p>
-
                         <p class="text-sm text-gray-500">
                             Licencia: {{ $doctor->medical_license_number ?? 'N/A' }}
+                        </p>
+                        <p class="text-sm text-gray-400">
+                            {{ $doctor->user->email }}
                         </p>
                     </div>
                 </div>
 
+                {{-- Botones --}}
                 <div class="flex space-x-3 mt-6 lg:mt-0">
-                    <x-wire-button outline gray href="{{ route('admin.doctors.index') }}">
+                    <a href="{{ route('admin.doctors.index') }}"
+                       class="px-4 py-2 bg-gray-200 rounded-lg text-sm hover:bg-gray-300">
                         Volver
-                    </x-wire-button>
+                    </a>
 
-                    <x-wire-button type="submit">
-                        <i class="fa-solid fa-floppy-disk mr-2"></i>
+                    <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">
                         Guardar cambios
-                    </x-wire-button>
+                    </button>
                 </div>
 
             </div>
-        </x-wire-card>
+        </div>
 
-        {{-- Formulario (sin tabs) --}}
-        <x-wire-card>
-            <div class="space-y-6">
-
-                <x-wire-native-select label="Especialidad" name="speciality_id">
-                    <option value="">Seleccione una especialidad</option>
-                    @foreach ($specialities as $speciality)
-                        <option value="{{ $speciality->id }}"
-                            @selected(old('speciality_id', $doctor->speciality_id) == $speciality->id)>
-                            {{ $speciality->name }}
-                        </option>
-                    @endforeach
-                </x-wire-native-select>
-
-                <x-wire-input
-                    label="Número de licencia médica"
-                    name="medical_license_number"
-                    value="{{ old('medical_license_number', $doctor->medical_license_number) }}"
-                />
-
-                <x-wire-textarea label="Biografía" name="biography">
-                    {{ old('biography', $doctor->biography) }}
-                </x-wire-textarea>
-
-            </div>
-        </x-wire-card>
+        {{-- Formulario reutilizable --}}
+        @include('admin.doctors._form')
 
     </form>
 </x-admin-layout>

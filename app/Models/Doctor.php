@@ -20,6 +20,6 @@ class Doctor extends Model
 
     public function speciality()
     {
-        return $this->belongsTo(Speciality::class);//elongsTo define la inversa de una relación. Mientras que hasMany se coloca en la tabla "padre", el belongsTo siempre va en la tabla "hija"
+        return $this->belongsTo(Speciality::class);
     }
 }

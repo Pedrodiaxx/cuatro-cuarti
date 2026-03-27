@@ -2,98 +2,120 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
 use App\Models\Appointment;
+use Livewire\Component;
 
 class ConsultationManager extends Component
 {
     public Appointment $appointment;
-    public $activeTab = 'consulta'; // 'consulta' or 'receta'
     
-    // Consulta fields
-    public $diagnosis = '';
-    public $treatment = '';
-    public $notes = '';
+    // Default Tab
+    public $activeTab = 'consulta';
 
-    // Receta fields
+    // Form fields
+    public $diagnosis;
+    public $treatment;
+    public $notes;
+    
+    // Dynamic Receta (Medications)
     public $medications = [];
 
-    // History
+    // Modal
     public $showHistoryModal = false;
-    public $showMedicalHistoryModal = false;
-    public $pastConsultations = [];
+    public $previousConsultations = [];
+
+    protected $rules = [
+        'diagnosis' => 'required|string',
+        'treatment' => 'required|string',
+        'notes' => 'nullable|string',
+        'medications' => 'array',
+        'medications.*.name' => 'required|string',
+        'medications.*.dosage' => 'required|string',
+        'medications.*.frequency' => 'required|string',
+    ];
+
+    protected $messages = [
+        'diagnosis.required' => 'El campo diagnóstico es obligatorio.',
+        'treatment.required' => 'El campo tratamiento es obligatorio.',
+        'medications.*.name.required' => 'Ingresa el nombre del medicamento.',
+        'medications.*.dosage.required' => 'Ingresa la dosis.',
+        'medications.*.frequency.required' => 'Ingresa la frecuencia.',
+    ];
 
     public function mount(Appointment $appointment)
     {
-        $this->appointment = $appointment->load(['patient.user', 'patient.bloodType', 'doctor.user']);
+        $this->appointment = $appointment;
+        $this->diagnosis = $appointment->diagnosis;
+        $this->treatment = $appointment->treatment;
+        $this->notes = $appointment->notes;
+        $this->medications = $appointment->medications ?? [];
         
-        // Initialize with one empty medication slot if empty
-        $this->addMedication();
+        $this->appointment->load('patient.user');
+        
+        // Start with empty medication if empty to encourage filling
+        if (empty($this->medications)) {
+            // $this->addMedication(); // optional
+        }
+    }
 
-        // Load past consultations including those without diagnosis to show they exist
-        $this->pastConsultations = Appointment::with(['doctor.user'])
-            ->where('patient_id', $appointment->patient_id)
-            ->where('id', '!=', $appointment->id)
-            ->orderBy('date', 'desc')
-            ->orderBy('start_time', 'desc')
-            ->get();
+    public function setTab($tab)
+    {
+        $this->activeTab = $tab;
     }
 
     public function addMedication()
     {
-        $this->medications[] = [
-            'name' => '',
-            'dose' => '',
-            'frequency' => ''
-        ];
+        $this->medications[] = ['name' => '', 'dosage' => '', 'frequency' => ''];
     }
 
     public function removeMedication($index)
     {
         unset($this->medications[$index]);
-        $this->medications = array_values($this->medications);
-        
-        if (empty($this->medications)) {
-            $this->addMedication();
-        }
+        $this->medications = array_values($this->medications); // Re-index array
     }
 
-    public function switchTab($tab)
+    public function openHistoryModal()
     {
-        $this->activeTab = $tab;
+        $this->previousConsultations = Appointment::where('patient_id', $this->appointment->patient_id)
+                                                    ->where('id', '!=', $this->appointment->id)
+                                                    ->whereNotNull('diagnosis')
+                                                    ->with('doctor.user')
+                                                    ->orderBy('date', 'desc')
+                                                    ->get();
+        $this->showHistoryModal = true;
     }
 
-    public function toggleHistoryModal()
+    public function closeHistoryModal()
     {
-        $this->showHistoryModal = !$this->showHistoryModal;
+        $this->showHistoryModal = false;
     }
 
-    public function toggleMedicalHistoryModal()
+    public function save()
     {
-        $this->showMedicalHistoryModal = !$this->showMedicalHistoryModal;
-    }
+        $this->validate();
 
-    public function saveConsultation()
-    {
         $this->appointment->update([
-            'status' => 2,
             'diagnosis' => $this->diagnosis,
             'treatment' => $this->treatment,
             'notes' => $this->notes,
-            'prescription_json' => json_encode($this->medications),
+            'medications' => $this->medications,
+            'status' => 2, // asuming 2 is "Completado"
         ]);
 
-        session()->flash('swall', [
-            'icon' => 'success',
-            'title' => 'Consulta Guardada',
-            'text' => 'Los datos de la consulta han sido registrados exitosamente.',
-        ]);
+        session()->flash('success', 'Consulta médica completada y receta guardada.');
 
         return redirect()->route('admin.appointments.index');
     }
 
     public function render()
     {
-        return view('livewire.admin.consultation-manager')->layout('layouts.admin', ['title' => 'Gestión de Consulta']);
+        return view('livewire.admin.consultation-manager')->layout('layouts.admin', [
+            'title' => 'Consulta | Pedrini',
+            'breadcrumbs' => [
+                ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
+                ['name' => 'Citas', 'href' => route('admin.appointments.index')],
+                ['name' => 'Consulta'],
+            ]
+        ]);
     }
 }

@@ -281,6 +281,7 @@ return [
         'winner'                   => 'ganador',
         'work'                     => 'trabajo',
         'year'                     => 'año',
+
         //Personalizados
         'observations'             => 'observaciones',
         'blood_type_id'            => 'tipo de sangre',
@@ -289,8 +290,9 @@ return [
         'surgical_history'        => 'antecedentes quirúrgico',
         'family_history'          => 'antecedentes familiares',
         'emergency_contact_name'  => 'nombre del contacto de emergencia',
-        'emergency_contact_phone' => 'tjjeléfono del contacto de emergencia',
+        'emergency_contact_phone' => 'teléfono del contacto de emergencia',
         'emergency_contact_relationship' => 'relación del contacto',
-
+        'start_time'              => 'hora de inicio',
+        'end_time'                => 'hora de fin',
     ],
 ];

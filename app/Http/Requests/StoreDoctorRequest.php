@@ -11,6 +11,7 @@ class StoreDoctorRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // IMPORTANTE: si está en false, nunca guardará doctores
         return true;
     }
 
@@ -22,10 +23,13 @@ class StoreDoctorRequest extends FormRequest
     public function rules(): array
 {
     return [
-        'user_id' => ['required', 'exists:users,id', 'unique:doctors,user_id'],
-        'speciality_id' => ['nullable', 'exists:specialities,id'],
-        'medical_license_number' => ['nullable', 'string', 'max:255'],
-        'biography' => ['nullable', 'string'],
+        'user_id' => 'required|exists:users,id|unique:doctors,user_id',
+        'speciality_id' => 'required|exists:specialities,id',
+
+        // 👇 NOMBRE CORRECTO (como tu modelo)
+        'medical_license_number' => 'required|string|max:100',
+
+        'biography' => 'nullable|string',
     ];
 }
 }

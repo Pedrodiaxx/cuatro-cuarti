@@ -1,86 +1,81 @@
 <x-admin-layout title="Citas | Pedrini"
-    :breadcrumbs="[
-        [
-            'name' => 'Dashboard',
-            'href' => route('admin.dashboard'),
-        ],
-        [
-            'name' => 'Citas',
-        ]
-    ]">
+:breadcrumbs="[
+    [
+        'name' => 'Dashboard',
+        'href' => route('admin.dashboard'),
+    ],
+    [
+        'name' => 'Citas',
+    ]
+]">
+  
+  <div class="mb-6 flex justify-between items-center bg-white shadow-sm p-4 rounded-lg">
+    <h2 class="text-xl font-bold text-gray-800">Citas médicas</h2>
+    <a href="{{ route('admin.appointments.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center shadow-md">
+       <i class="fa-solid fa-plus mr-2"></i> Nuevo
+    </a>
+  </div>
 
-    <div class="mb-4 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800">Citas Médicas</h2>
-        <a href="{{ route('admin.appointments.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            + Nuevo
-        </a>
-    </div>
+  @if(session('success'))
+      <div class="mb-4 p-4 text-green-700 bg-green-100 rounded-lg">
+          {{ session('success') }}
+      </div>
+  @endif
 
-    @if(session('success'))
-        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-            {{ session('success') }}
-        </div>
-    @endif
+  @if(session('download_pdf'))
+      <script>
+          document.addEventListener('DOMContentLoaded', function() {
+              const link = document.createElement('a');
+              link.href = "{{ session('download_pdf') }}";
+              link.setAttribute('download', 'comprobante_cita.pdf');
+              link.setAttribute('target', '_blank');
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+          });
+      </script>
+  @endif
 
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 bg-white border-b border-gray-200">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($appointments as $appointment)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $appointment->id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $appointment->patient->user->name ?? 'N/A' }} {{ $appointment->patient->user->last_name ?? '' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $appointment->doctor->user->name ?? 'N/A' }} {{ $appointment->doctor->user->last_name ?? '' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ \Carbon\Carbon::parse($appointment->date)->format('d/m/Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ \Carbon\Carbon::parse($appointment->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($appointment->end_time)->format('H:i') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @if($appointment->status == 1)
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Programado</span>
-                                    @else
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Completado</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <div class="flex justify-center space-x-2">
-                                        <!-- Botón de consulta médica -->
-                                        <a href="{{ route('admin.appointments.consultation', $appointment->id) }}" class="text-white bg-green-500 hover:bg-green-600 rounded px-2 py-1" title="Atender Consulta">
-                                            <i class="fa-solid fa-stethoscope"></i>
-                                        </a>
-                                        <!-- Other generic actions (Edit/Delete placeholder) -->
-                                        <button class="text-white bg-blue-500 hover:bg-blue-600 rounded px-2 py-1">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                        @if($appointments->isEmpty())
-                            <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No hay citas registradas.</td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
+  <div class="bg-white shadow rounded-lg overflow-x-auto border border-gray-200">
+    <table class="w-full text-sm text-left text-gray-600 min-w-max">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+        <tr>
+            <th class="px-6 py-4 font-semibold text-gray-500">ID</th>
+            <th class="px-6 py-4 font-semibold text-gray-500">Paciente</th>
+            <th class="px-6 py-4 font-semibold text-gray-500">Doctor</th>
+            <th class="px-6 py-4 font-semibold text-gray-500">Fecha</th>
+            <th class="px-6 py-4 font-semibold text-gray-500">Hora de inicio</th>
+            <th class="px-6 py-4 font-semibold text-gray-500">Estatus</th>
+            <th class="px-6 py-4 font-semibold text-gray-500 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        @forelse($appointments as $appointment)
+        <tr class="bg-white hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4">{{ $appointment->id }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">{{ $appointment->patient->user->name ?? 'N/A' }} {{ $appointment->patient->user->last_name ?? '' }}</td>
+            <td class="px-6 py-4">Dr. {{ $appointment->doctor->user->name ?? 'N/A' }} {{ $appointment->doctor->user->last_name ?? '' }}</td>
+            <td class="px-6 py-4">{{ \Carbon\Carbon::parse($appointment->date)->format('d/m/Y') }}</td>
+            <td class="px-6 py-4">{{ \Carbon\Carbon::parse($appointment->start_time)->format('H:i') }}</td>
+            <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Programado
+                </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+                <a href="{{ route('admin.appointments.consult', $appointment) }}"
+                   class="inline-flex items-center justify-center p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition shadow-sm"
+                   title="Atender Cita">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </a>
+            </td>
+        </tr>
+        @empty
+        <tr>
+            <td colspan="7" class="px-6 py-8 text-center text-gray-500">No hay citas registradas.</td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
 </x-admin-layout>

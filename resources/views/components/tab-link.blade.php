@@ -10,7 +10,7 @@
 <li class="me-2">
     <a
         href="#"
-        @click.prevent="tab = @js($tab)" {{--Cuando le das click, cambia la variable tab.--}}
+        @click.prevent="tab = @js($tab)"
         class="{{ $base }}"
         :class="tab === @js($tab)
             ? ({{ $error ? 'true' : 'false' }} ? 'text-red-600 border-red-600' : 'text-blue-600 border-blue-600')

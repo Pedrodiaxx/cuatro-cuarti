@@ -9,8 +9,8 @@
                     </svg>
                 </button>
                 <a href="/" class="flex ms-2 md:me-24">
-                <img src="{{ asset('images/logodoc.png') }}" class="h-8 me-3" alt="Logo" />
-                <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Pedriini</span>
+                <img src="{{ asset('images/logodoc2.png') }}" class="h-8 me-3" alt="Logo" />
+                <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Pedrini</span>
                 </a>
             </div>
             <div class="flex items-center">

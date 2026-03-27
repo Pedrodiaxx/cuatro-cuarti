@@ -6,11 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Appointment extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'patient_id',
         'doctor_id',
@@ -23,20 +18,18 @@ class Appointment extends Model
         'diagnosis',
         'treatment',
         'notes',
-        'prescription_json',
+        'medications',
     ];
 
-    /**
-     * Get the patient that owns the appointment.
-     */
+    protected $casts = [
+        'medications' => 'array',
+    ];
+
     public function patient()
     {
         return $this->belongsTo(Patient::class);
     }
 
-    /**
-     * Get the doctor that owns the appointment.
-     */
     public function doctor()
     {
         return $this->belongsTo(Doctor::class);
