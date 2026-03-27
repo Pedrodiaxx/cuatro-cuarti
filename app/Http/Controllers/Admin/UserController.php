@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Doctor;
 
 class UserController extends Controller
 {
@@ -89,6 +91,14 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')->with('success', 'Usuario creado exitosamente.');
     }
+
+    if ($roleName === 'Doctor') {
+        $doctor = $user->doctor()->firstOrCreate([]);
+        return redirect()->route('admin.doctors.edit', $doctor);
+    }
+
+    return redirect()->route('admin.users.index')->with('success', 'Usuario creado exitosamente.');
+}
 
     /**
      * Muestra el formulario para editar un usuario existente.

@@ -1,0 +1,122 @@
+﻿
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true i… 0.02s  
+
+   WARN  Tests\Feature\ApiTokenPermissionsTest
+  - api token p… 0.45s  
+
+   PASS  Tests\Feature\AuthenticationTest
+  ✓ login scree… 0.52s  
+  ✓ users can a… 0.50s  
+  ✓ users canno… 0.43s  
+
+   PASS  Tests\Feature\BrowserSessionsTest
+  ✓ other brows… 0.48s  
+
+   WARN  Tests\Feature\CreateApiTokenTest
+  - api tokens…  0.02s  
+
+   PASS  Tests\Feature\DeleteAccountTest
+  ✓ user accoun… 0.43s  
+  ✓ correct pas… 0.43s  
+
+   WARN  Tests\Feature\DeleteApiTokenTest
+  - api tokens…  0.02s  
+
+   WARN  Tests\Feature\EmailVerificationTest
+  - email verif… 0.02s  
+  - email can b… 0.02s  
+  - email can n… 0.02s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ it returns…  0.41s  
+
+   FAIL  Tests\Feature\GuestCannotCreateUserTest
+  ⨯ un usuario…  0.03s  
+
+   PASS  Tests\Feature\PasswordConfirmationTest
+  ✓ confirm pas… 0.43s  
+  ✓ password ca… 0.43s  
+  ✓ password is… 0.62s  
+
+   PASS  Tests\Feature\PasswordResetTest
+  ✓ reset passw… 0.41s  
+  ✓ reset passw… 0.64s  
+  ✓ reset passw… 0.62s  
+  ✓ password ca… 0.67s  
+
+   PASS  Tests\Feature\ProfileInformationTest
+  ✓ current pro… 0.42s  
+  ✓ profile inf… 0.42s  
+array:2 [
+  "_token" => "KxHEI7ou1mfzqmvhwqjdZjWeY1nMOgJvI236AOlq"
+  "_flash" => array:2 [
+    "old" => []
+    "new" => []
+  ]
+] // vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:1839
+
+   FAIL  Tests\Feature\RegistrationTest
+  ✓ registratio… 0.41s  
+  - registratio… 0.02s  
+  ⨯ new users c… 1.89s  
+
+   PASS  Tests\Feature\TwoFactorAuthenticationSettingsTest
+  ✓ two factor…  0.46s  
+  ✓ recovery co… 0.50s  
+  ✓ two factor…  0.54s  
+
+   PASS  Tests\Feature\UpdatePasswordTest
+  ✓ password ca… 0.44s  
+  ✓ current pas… 0.44s  
+  ✓ new passwor… 0.44s  
+
+   PASS  Tests\Feature\UserCanDeleteOtherUserTest
+  ✓ un usuario…  0.42s  
+
+   PASS  Tests\Feature\UserCanUpdateOtherUserTest
+  ✓ un usuario…  0.42s  
+
+   PASS  Tests\Feature\UserSelfDeleteTest
+  ✓ un usuario…  0.42s  
+
+   PASS  Tests\Feature\UserUpdateValidationTest
+  ✓ no se puede… 0.43s  
+  ────────────────────  
+   F…  QueryException   
+  SQLSTATE[HY000]: General error: 1 table users has no column named role (Connection: sqlite, SQL: insert into "users" ("name", "email", "email_verified_at", "password", "two_factor_secret", "two_factor_recovery_codes", "remember_token", "profile_photo_path", "current_team_id", "id_number", "phone", "address", "role", "updated_at", "created_at") values (Prof. Ferne Rosenbaum, xernser@example.net, 2026-03-21 18:57:59, $2y$04$9gH2Pe7hHpG2SU/qILJc3.KhW9wbt0g7QsUWkWPSYcrlba7K8nTji, ?, ?, biCgboQsZ5, ?, ?, OR798337, 9999999999, 333 Mohammad Centers, admin, 2026-03-21 18:57:59, 2026-03-21 18:57:59))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:564
+    560▕             if ($this->pretending()) {
+    561▕                 return true;
+    562▕             }
+    563▕ 
+  ➜ 564▕             $statement = $this->getPdo()->prepare($query);
+    565▕ 
+    566▕             $this->bindValues($statement, $this->prepareBindings($bindings));
+    567▕ 
+    568▕             $this->recordsHaveBeenModified();
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:564
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:811
+
+  ────────────────────  
+   FAILED  Tests\Fea…   
+  The user is not authenticated
+Failed asserting that false is true.
+
+  at tests\Feature\RegistrationTest.php:32
+     28▕         'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
+     29▕     ]);
+     30▕ 
+     31▕     $response->dumpSession();
+  ➜  32▕     $this->assertAuthenticated();
+     33▕     $response->assertRedirect();
+     34▕ })->skip(function () {
+     35▕     return ! Features::enabled(Features::registration());
+     36▕ }, 'Registration support is not enabled.');
+
+
+  Tests:    2 failed, 7 skipped, 28 passed (55 assertions)
+  Duration: 15.48s
+
